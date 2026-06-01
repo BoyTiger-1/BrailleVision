@@ -264,3 +264,8 @@ document.body.classList.add("high-contrast");
 if (location.port === "8000") {
   $("apiUrl").value = location.origin;
 }
+// GitHub Pages serves static files only — point API URL to your deployed backend.
+if (location.hostname.endsWith("github.io") && !$("apiUrl").value) {
+  $("apiUrl").placeholder = "https://your-api.onrender.com";
+  setError("Set API URL to your live BrailleVision backend (GitHub Pages cannot run the .pkl model).");
+}

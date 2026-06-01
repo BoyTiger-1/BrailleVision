@@ -116,6 +116,7 @@ def model_info():
         "image_size": b.get("image_size"),
         "metrics": b.get("metrics"),
         "dataset": b.get("dataset"),
+        "datasets": b.get("datasets"),
     }
 
 

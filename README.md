@@ -4,15 +4,143 @@
 
 This repository includes:
 
-- A **trained machine-learning classifier** (`models/braille_classifier.pkl`) — **100% held-out accuracy** on the included A–Z practice dataset.
+- A **trained machine-learning classifier** (`models/braille_classifier.pkl`) — **~99% held-out accuracy** on merged practice datasets (4,160 source images).
 - **OpenCV** dot detection and **6-dot cell segmentation** for multi-character lines (camera / full words).
 - A **standalone web app** (`web/`) — HTML, CSS, and JavaScript (camera, single & multiple uploads, live scan, TTS).
 - A **FastAPI** backend that loads the `.pkl` model and serves the API + static UI at `/app`.
 
 ---
 
+## Inspiration
+
+Braille is essential for literacy and independence for many visually impaired people, yet family members, teachers, and volunteers often cannot read embossed dots on paper. Hackathons like **BrailleVision 2026** ask for technology that works on **real physical Braille**, not just Unicode symbols on a screen. I built BrailleVision so a phone or webcam could act as a bridge: point, scan, read, and hear English—making printed Braille more accessible in classrooms, homes, and public spaces.
+
+---
+
+## What it does
+
+BrailleVision is a full-stack assistive scanner:
+
+- **Captures** Braille via live camera, single image upload, or **batch upload** of many images.
+- **Detects** round dot blobs with OpenCV and groups them into standard **6-dot cells**.
+- **Recognizes** isolated letters with a trained **MLP classifier** (`braille_classifier.pkl`) learned from thousands of labeled cell images.
+- **Decodes** multi-cell words/lines using geometric Braille patterns when the camera sees full words.
+- **Speaks** recognized text with the browser **Web Speech API** and offers **high-contrast**, large-control accessibility.
+
+Open the web UI at `/app` when the API is running, or use the REST/WebSocket API from your own client.
+
+---
+
+## How I built it
+
+1. **Data** — Merged two practice datasets: *Braille Alphabet Image Dataset (A–Z)* (2,600 PNGs) and *Braille Dataset* (1,560 augmented JPGs), totaling **4,160** labeled single-cell images.
+2. **Training** — `scripts/train_model.py` binarizes 50×50 cells, augments (flip, rotate, noise, blur), and trains a scikit-learn **MLP** (1024→512→256) with `StandardScaler`; saved as `models/braille_classifier.pkl` via joblib.
+3. **Vision** — `backend/braille/detector.py` implements CLAHE, adaptive/Otsu thresholding, circularity-filtered contours, and horizontal cell bucketing.
+4. **Hybrid inference** — `ml_detector.py` uses **ML for single-cell** uploads and **pattern decode for multi-cell** camera lines.
+5. **API** — FastAPI (`backend/main.py`) exposes `/scan`, batch endpoints, WebSocket live scan, and serves static `web/` at `/app`.
+6. **Frontend** — Vanilla HTML/CSS/JS (`web/`) for camera, uploads, TTS, and alignment hints—no framework required for deployment.
+
+---
+
+## Challenges I ran into
+
+- **Unicode vs physical Braille** — Judges require dot detection on paper; a text translator does not qualify.
+- **Row vs cell clustering** — Early versions grouped top/middle/bottom dot *rows* instead of 2×3 *cells*; fixing pitch-based horizontal bucketing was critical.
+- **ML vs geometry** — The classifier excels on 50×50 practice cells but crops from photos look different; a **hybrid** (ML for single cells, OpenCV patterns for words) improved real scans.
+- **Windows paths** — Dataset folders with special dashes broke `cv2.imread`; **byte decode + `imdecode`** fixed it.
+- **Hosting** — Browsers cannot run `.pkl` files; the model must live on a **Python server** (see [Hosting on GitHub](#hosting-on-github) below).
+
+---
+
+## Accomplishments that I'm proud of
+
+- **~99% test accuracy** on a stratified holdout after merging both datasets.
+- End-to-end demo: camera → dots → text → speech in near real time on CPU only.
+- Accessible UI with voice guidance, live regions, and alignment feedback.
+- Clear documentation and a reproducible training script for new datasets.
+- Open-source release: [github.com/BoyTiger-1/BrailleVision](https://github.com/BoyTiger-1/BrailleVision).
+
+---
+
+## What I learned
+
+- How **6-dot Braille** is laid out and encoded as bit patterns (Grade 1).
+- When to use **classical CV** vs **supervised learning** in the same pipeline.
+- Building **accessible** web UIs (contrast, TTS, ARIA live regions, large targets).
+- Packaging ML for deployment: joblib bundles, API boundaries, and why pickle does not belong in the browser.
+- Practical dataset merging (folder-per-class vs flat filenames) and augmentation for small vision sets.
+
+---
+
+## What's next for BrailleVision
+
+- **Grade 2 (contracted) Braille** and multi-language tables.
+- **CNN / YOLO** dot detector fine-tuned on cropped cells from real photos.
+- **Mobile app** (Flutter) with on-device inference (ONNX/TFLite).
+- **Glare and blur detection** with auto-capture when the frame is sharp.
+- **Community dataset** — crowdsourced labeled photos of physical Braille sheets.
+- **One-click cloud deploy** (Render/Railway) with HTTPS for mobile camera access.
+
+---
+
+## Hosting on GitHub
+
+Your project code already lives at **[github.com/BoyTiger-1/BrailleVision](https://github.com/BoyTiger-1/BrailleVision)**. “Hosting on GitHub” usually means one of three things:
+
+### 1. Host the code (done)
+
+```bash
+git clone https://github.com/BoyTiger-1/BrailleVision.git
+cd BrailleVision
+```
+
+Push updates:
+
+```bash
+git add -A
+git commit -m "Describe your change"
+git push origin main
+```
+
+### 2. GitHub Pages (static UI only)
+
+GitHub Pages serves **HTML/CSS/JS** only. It **cannot** run the Python API or load `braille_classifier.pkl` in the browser.
+
+- Enable: repo **Settings → Pages → Source**: `GitHub Actions` or branch `main` folder `/web`.
+- Users must set **API URL** in the app to a live backend (see option 3).
+- A workflow is included at `.github/workflows/static-web.yml` (optional).
+
+### 3. Full app (recommended for demos)
+
+Run the **FastAPI** server on a host with Python 3.10+:
+
+| Platform | Notes |
+|----------|--------|
+| **Your PC** | `cd backend && python main.py` → open `http://127.0.0.1:8000/app/` |
+| **[Render](https://render.com)** | Web service, build: `pip install -r backend/requirements.txt`, start: `uvicorn main:app --host 0.0.0.0 --port $PORT` from `backend/` |
+| **[Railway](https://railway.app)** | Same as Render; add `models/braille_classifier.pkl` to the repo |
+| **VPS / school server** | Clone repo, venv, systemd + nginx with HTTPS |
+
+**HTTPS** is required for phone cameras on non-localhost URLs.
+
+After deploy, open `https://YOUR-API-HOST/app/` or set that URL in the web app’s **API URL** field.
+
+### 4. Large files
+
+`models/braille_classifier.pkl` (~35 MB) is in the repo. If GitHub rejects a push, use [Git LFS](https://git-lfs.github.com/) or train on the server after deploy (`python scripts/train_model.py`).
+
+---
+
 ## Table of contents
 
+0. [Inspiration](#inspiration)
+0. [What it does](#what-it-does)
+0. [How I built it](#how-i-built-it)
+0. [Challenges I ran into](#challenges-i-ran-into)
+0. [Accomplishments that I'm proud of](#accomplishments-that-im-proud-of)
+0. [What I learned](#what-i-learned)
+0. [What's next for BrailleVision](#whats-next-for-braillevision)
+0. [Hosting on GitHub](#hosting-on-github)
 1. [Problem statement](#problem-statement)
 2. [How it works](#how-it-works)
 3. [Repository layout](#repository-layout)
@@ -372,12 +500,33 @@ python backend/run_detect.py samples/braille_hello.png
 
 ## Practice dataset
 
+BrailleVision trains on **both** of these merged sources (4,160 images total):
+
+### Dataset 1 — Braille Alphabet Image Dataset (A–Z)
+
 | Property | Value |
 |----------|--------|
 | Location | `Braille Alphabet Image Dataset (A-Z)/` |
 | Format | PNG, 50×50 |
+| Count | 2,600 (100 per letter) |
 | Labels | Parent folder name (`A`, `B`, …) |
-| Use case | Train/test single-character classifier; upload in web UI |
+
+### Dataset 2 — Braille Dataset
+
+| Property | Value |
+|----------|--------|
+| Location | `Braille Dataset/Braille Dataset/` |
+| Format | JPG (dim / rot / whs augmentations in filename) |
+| Count | 1,560 (60 per letter) |
+| Labels | First character of filename (e.g. `a1.JPG0dim.jpg` → **a**) |
+
+### Training command (merged)
+
+```bash
+python scripts/train_model.py --augment 4
+```
+
+Auto-discovers all Braille folders in the repo root. Latest merged metrics: **~98.7%** test / **~99.8%** train accuracy.
 
 **Loading note:** On Windows, paths with special characters may fail with `cv2.imread`. The code reads via **bytes + `cv2.imdecode`** (already implemented in training and inference).
 
@@ -387,7 +536,7 @@ python backend/run_detect.py samples/braille_hello.png
 
 | Scenario | Expected performance |
 |----------|----------------------|
-| Practice PNGs (A–Z folder) | **~100%** letter accuracy (ML path) |
+| Practice PNGs / JPGs (merged datasets) | **~99%** letter accuracy (ML path) |
 | Synthetic multi-letter (`samples/braille_hello.png`) | **Correct word** via CV pattern path (`hello`) |
 | Real camera, good light, embossed type | Good; depends on focus and glare |
 | Handwritten Braille | Experimental; dot shape varies |
