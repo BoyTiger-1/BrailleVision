@@ -52,8 +52,8 @@ BrailleVision uses a device camera to photograph **real embossed or handwritten 
 
 ## Repository
 
-GitHub: *(add your link after push)*
+GitHub: https://github.com/BoyTiger-1/BrailleVision
 
 ## Live demo
 
-*(optional — deploy frontend + backend to Railway/Render/Fly)*
+https://braillevision.onrender.com/app/
