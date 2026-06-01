@@ -1,0 +1,74 @@
+:root {
+  --bg: #0a0a0f;
+  --surface: #14141f;
+  --text: #f5f5f7;
+  --muted: #a8a8b3;
+  --accent: #5eead4;
+  --accent-dim: #2dd4bf;
+  --warn: #fbbf24;
+  --error: #f87171;
+  --focus: #fde047;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 2px solid var(--accent);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  min-height: 56px;
+  min-width: 120px;
+}
+
+button:hover,
+button:focus-visible {
+  background: var(--accent);
+  color: #0a0a0f;
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--accent-dim);
+  color: #0a0a0f;
+  font-weight: 700;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}

@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.env
+.env.*
+*.egg-info/
+dist/
+build/
+
+# Node (optional React dev UI)
+node_modules/
+frontend/dist/
+
+# IDE / local (no editor-specific rules committed)
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Generated debug outputs
+samples/*_debug.jpg
+*.log
+
+# Keep trained model and dataset in repo
+!models/
+!models/*.pkl

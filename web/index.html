@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="BrailleVision — scan physical Braille with your camera" />
+    <title>BrailleVision — Physical Braille Scanner</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <header class="site-header">
+      <h1>BrailleVision</h1>
+      <p class="tagline">Real physical Braille → English text &amp; speech (ML + camera)</p>
+    </header>
+
+    <main id="main">
+      <section class="panel" aria-labelledby="capture-heading">
+        <h2 id="capture-heading">Capture</h2>
+
+        <div class="video-wrap" role="img" aria-label="Camera preview">
+          <p class="placeholder" id="placeholder">Start the camera or upload image(s).</p>
+          <video id="video" playsinline muted hidden></video>
+          <canvas id="captureCanvas" hidden aria-hidden="true"></canvas>
+          <div class="alignment-frame" aria-hidden="true"></div>
+        </div>
+
+        <img id="debugImage" class="debug-image" alt="Detection overlay" hidden />
+
+        <div class="toolbar" role="toolbar" aria-label="Scanner controls">
+          <button type="button" id="btnCamera" class="btn primary">Start camera</button>
+          <button type="button" id="btnScan" class="btn primary" disabled>Scan now</button>
+          <button type="button" id="btnLive" class="btn" disabled aria-pressed="false">Live scan</button>
+          <button type="button" id="btnStop" class="btn" disabled>Stop camera</button>
+          <label class="btn upload-label">
+            Upload image(s)
+            <input type="file" id="fileInput" accept="image/*" multiple hidden />
+          </label>
+        </div>
+      </section>
+
+      <section class="panel results" aria-labelledby="results-heading" aria-live="polite" aria-atomic="true">
+        <h2 id="results-heading">Results</h2>
+        <p class="recognized" id="recognizedText">—</p>
+
+        <dl class="stats" id="stats">
+          <div><dt>Confidence</dt><dd id="statConf">—</dd></div>
+          <div><dt>Dots</dt><dd id="statDots">—</dd></div>
+          <div><dt>Cells</dt><dd id="statCells">—</dd></div>
+        </dl>
+
+        <p class="hint" id="hint" role="status"></p>
+        <p class="error" id="error" role="alert" hidden></p>
+
+        <div id="batchResults" class="batch-results" hidden></div>
+
+        <div class="toolbar">
+          <button type="button" id="btnSpeak" class="btn" disabled>Read aloud</button>
+          <button type="button" id="btnStopSpeak" class="btn">Stop speech</button>
+        </div>
+      </section>
+
+      <section class="panel settings" aria-labelledby="settings-heading">
+        <h2 id="settings-heading">Accessibility</h2>
+        <label class="toggle"><input type="checkbox" id="voiceGuide" checked /> Voice guidance</label>
+        <label class="toggle"><input type="checkbox" id="highContrast" checked /> High contrast</label>
+        <label class="toggle"><input type="checkbox" id="showDebug" /> Show detection overlay</label>
+        <label class="toggle">
+          API URL
+          <input type="text" id="apiUrl" class="api-input" value="" placeholder="http://127.0.0.1:8000" />
+        </label>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>BrailleVision — trained classifier (<code>braille_classifier.pkl</code>) + OpenCV cell segmentation</p>
+    </footer>
+
+    <script src="app.js" type="module"></script>
+  </body>
+</html>

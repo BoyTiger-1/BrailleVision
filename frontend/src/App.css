@@ -1,0 +1,174 @@
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+header h1 {
+  font-size: 2.25rem;
+  margin: 0 0 0.25rem;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  color: var(--muted);
+  margin: 0 0 1.5rem;
+}
+
+.high-contrast {
+  --bg: #000;
+  --surface: #111;
+  --text: #fff;
+  --accent: #0ff;
+  --accent-dim: #0dd;
+}
+
+.camera-section h2,
+.output-section h2,
+.settings h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.video-wrap {
+  position: relative;
+  background: var(--surface);
+  border: 3px solid var(--accent);
+  border-radius: 16px;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  max-height: 420px;
+}
+
+.video-wrap video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+.video-wrap video.active {
+  display: block;
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.alignment-frame {
+  position: absolute;
+  inset: 12%;
+  border: 3px dashed var(--warn);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  min-height: 56px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.output-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border-radius: 16px;
+  border: 2px solid var(--muted);
+}
+
+.recognized-text {
+  font-size: 2rem;
+  font-weight: 700;
+  word-break: break-word;
+  min-height: 2.5rem;
+}
+
+.stats {
+  display: flex;
+  gap: 2rem;
+  margin: 1rem 0;
+}
+
+.stats dt {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.stats dd {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.hint.ok {
+  color: var(--accent);
+}
+
+.hint.warn {
+  color: var(--warn);
+}
+
+.error {
+  color: var(--error);
+  font-weight: 600;
+}
+
+.debug-img {
+  width: 100%;
+  margin-top: 1rem;
+  border-radius: 12px;
+  border: 2px solid var(--accent);
+}
+
+.settings {
+  margin-top: 2rem;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.toggle input {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+footer {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--muted);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+  .controls button,
+  .upload-btn {
+    flex: 1 1 100%;
+  }
+}
