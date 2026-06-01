@@ -242,6 +242,55 @@ main {
   border-top: 1px solid #333;
   color: var(--muted);
   font-size: 0.9rem;
+  text-align: center;
+}
+
+.legal-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1rem;
+  margin: 0.75rem 0;
+}
+
+.legal-nav a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.legal-nav a:hover,
+.legal-nav a:focus-visible {
+  text-decoration: underline;
+  outline: 2px solid var(--focus);
+}
+
+.legal-note {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+}
+
+.legal-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 1.5rem 2rem;
+}
+
+.legal-page h2 {
+  margin-top: 1.75rem;
+  font-size: 1.15rem;
+}
+
+.legal-page ul {
+  padding-left: 1.25rem;
+}
+
+.legal-page a {
+  color: var(--accent);
+}
+
+.tagline a {
+  color: var(--accent);
 }
 
 @media (max-width: 560px) {

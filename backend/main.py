@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -35,6 +36,16 @@ app.add_middleware(
 
 if WEB_DIR.is_dir():
     app.mount("/app", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
+
+
+@app.get("/")
+def root():
+    return RedirectResponse(url="/app/", status_code=302)
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return RedirectResponse(url="/app/", status_code=302)
 
 
 class ScanResponse(BaseModel):

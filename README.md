@@ -48,7 +48,7 @@ Open the web UI at `/app` when the API is running, or use the REST/WebSocket API
 - **Row vs cell clustering** — Early versions grouped top/middle/bottom dot *rows* instead of 2×3 *cells*; fixing pitch-based horizontal bucketing was critical.
 - **ML vs geometry** — The classifier excels on 50×50 practice cells but crops from photos look different; a **hybrid** (ML for single cells, OpenCV patterns for words) improved real scans.
 - **Windows paths** — Dataset folders with special dashes broke `cv2.imread`; **byte decode + `imdecode`** fixed it.
-- **Hosting** — Browsers cannot run `.pkl` files; the model must live on a **Python server** (see [Hosting on GitHub](#hosting-on-github) below).
+- **Client/server split** — Browsers cannot run `.pkl` files; inference runs on the API server.
 
 ---
 
@@ -79,55 +79,6 @@ Open the web UI at `/app` when the API is running, or use the REST/WebSocket API
 - **Mobile app** (Flutter) with on-device inference (ONNX/TFLite).
 - **Glare and blur detection** with auto-capture when the frame is sharp.
 - **Community dataset** — crowdsourced labeled photos of physical Braille sheets.
-- **One-click cloud deploy** (Render/Railway) with HTTPS for mobile camera access.
-
----
-
-## Hosting on GitHub
-
-Your project code already lives at **[github.com/BoyTiger-1/BrailleVision](https://github.com/BoyTiger-1/BrailleVision)**. “Hosting on GitHub” usually means one of three things:
-
-### 1. Host the code (done)
-
-```bash
-git clone https://github.com/BoyTiger-1/BrailleVision.git
-cd BrailleVision
-```
-
-Push updates:
-
-```bash
-git add -A
-git commit -m "Describe your change"
-git push origin main
-```
-
-### 2. GitHub Pages (static UI only)
-
-GitHub Pages serves **HTML/CSS/JS** only. It **cannot** run the Python API or load `braille_classifier.pkl` in the browser.
-
-- Enable: repo **Settings → Pages → Source**: `GitHub Actions` or branch `main` folder `/web`.
-- Users must set **API URL** in the app to a live backend (see option 3).
-- A workflow is included at `.github/workflows/static-web.yml` (optional).
-
-### 3. Full app (recommended for demos)
-
-Run the **FastAPI** server on a host with Python 3.10+:
-
-| Platform | Notes |
-|----------|--------|
-| **Your PC** | `cd backend && python main.py` → open `http://127.0.0.1:8000/app/` |
-| **[Render](https://render.com)** | Web service, build: `pip install -r backend/requirements.txt`, start: `uvicorn main:app --host 0.0.0.0 --port $PORT` from `backend/` |
-| **[Railway](https://railway.app)** | Same as Render; add `models/braille_classifier.pkl` to the repo |
-| **VPS / school server** | Clone repo, venv, systemd + nginx with HTTPS |
-
-**HTTPS** is required for phone cameras on non-localhost URLs.
-
-After deploy, open `https://YOUR-API-HOST/app/` or set that URL in the web app’s **API URL** field.
-
-### 4. Large files
-
-`models/braille_classifier.pkl` (~35 MB) is in the repo. If GitHub rejects a push, use [Git LFS](https://git-lfs.github.com/) or train on the server after deploy (`python scripts/train_model.py`).
 
 ---
 
@@ -140,7 +91,6 @@ After deploy, open `https://YOUR-API-HOST/app/` or set that URL in the web app�
 0. [Accomplishments that I'm proud of](#accomplishments-that-im-proud-of)
 0. [What I learned](#what-i-learned)
 0. [What's next for BrailleVision](#whats-next-for-braillevision)
-0. [Hosting on GitHub](#hosting-on-github)
 1. [Problem statement](#problem-statement)
 2. [How it works](#how-it-works)
 3. [Repository layout](#repository-layout)
@@ -152,10 +102,8 @@ After deploy, open `https://YOUR-API-HOST/app/` or set that URL in the web app�
 9. [Practice dataset](#practice-dataset)
 10. [Accuracy and limitations](#accuracy-and-limitations)
 11. [Accessibility](#accessibility)
-12. [Deployment](#deployment)
-13. [Hackathon submission checklist](#hackathon-submission-checklist)
-14. [Troubleshooting](#troubleshooting)
-15. [License](#license)
+12. [Troubleshooting](#troubleshooting)
+13. [License](#license)
 
 ---
 
@@ -240,7 +188,7 @@ flowchart TB
 - **Training script:** `scripts/train_model.py`
 - **Metrics (included run):** **100%** train and test accuracy on stratified 85/15 split after augmentation.
 
-> **Note for judges:** The `.pkl` file is loaded **only on the Python server**. Browsers cannot execute pickle files directly (security). The HTML/JS UI calls the REST API, which runs inference with `joblib.load()`.
+> The `.pkl` model is loaded on the API server; the web UI calls the REST API for inference.
 
 ---
 
@@ -376,7 +324,6 @@ Browse to **http://127.0.0.1:8000/app/** → allow camera → **Scan now** or up
 | Voice guidance | Speaks hints and recognized text |
 | High contrast | Increases UI contrast |
 | Show detection overlay | Returns debug JPEG with green dot circles |
-| API URL | Backend base URL (default `http://127.0.0.1:8000` on localhost) |
 
 ### Testing with practice data
 
@@ -558,49 +505,16 @@ Auto-discovers all Braille folders in the repo root. Latest merged metrics: **~9
 
 ---
 
-## Deployment
-
-### Same machine
-
-Serve on `0.0.0.0:8000` and open `/app/` from phones on the same Wi‑Fi (use your PC’s LAN IP in **API URL** if needed).
-
-### Production checklist
-
-1. Use **HTTPS** (browsers require secure context for camera on non-localhost).
-2. Put **nginx** or **Caddy** in front of uvicorn.
-3. Do **not** expose pickle upload endpoints (there are none — model is server-side only).
-4. Set `workers=1` or preload model once per worker to avoid reloading `.pkl`.
-
-Example:
-
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1
-```
-
----
-
-## Hackathon submission checklist
-
-- [ ] Demo video: practice upload → camera scan → TTS  
-- [ ] This GitHub repo link  
-- [ ] Stack: Python, OpenCV, scikit-learn, FastAPI, HTML/JS  
-- [ ] Explain **physical dot detection** (see [How it works](#how-it-works))  
-- [ ] Report **100%** on held-out A–Z test set + real-camera notes  
-- [ ] List accessibility features  
-- [ ] Future work: Grade 2, mobile app, fine-tuned CNN on cropped cells  
-
----
-
 ## Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
-| `Model not found` | Run `python scripts/train_model.py` |
-| Camera blocked | Use HTTPS or localhost; check browser permissions |
-| `Scan failed` / network error | Start backend; set correct **API URL** |
-| Empty text | Improve lighting; move closer; use alignment frame |
-| Wrong letters on photos | Hold paper flat; avoid motion blur |
-| Large `.pkl` (~35 MB) | Normal for MLP with 2500 inputs; use `compress=3` in training |
+| `Model not found` | `python scripts/train_model.py` |
+| Camera blocked | HTTPS or localhost; browser camera permissions |
+| `Scan failed` / network error | API unreachable; check `/health` |
+| Empty text | Lighting, distance, alignment frame |
+| Wrong letters on photos | Flat paper, reduce motion blur |
+| Large `.pkl` (~35 MB) | Expected for MLP input size 2500 |
 
 ---
 

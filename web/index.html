@@ -66,15 +66,17 @@
         <label class="toggle"><input type="checkbox" id="voiceGuide" checked /> Voice guidance</label>
         <label class="toggle"><input type="checkbox" id="highContrast" checked /> High contrast</label>
         <label class="toggle"><input type="checkbox" id="showDebug" /> Show detection overlay</label>
-        <label class="toggle">
-          API URL
-          <input type="text" id="apiUrl" class="api-input" value="" placeholder="http://127.0.0.1:8000" />
-        </label>
       </section>
     </main>
 
     <footer class="site-footer">
-      <p>BrailleVision — trained classifier (<code>braille_classifier.pkl</code>) + OpenCV cell segmentation</p>
+      <p>BrailleVision — physical Braille recognition</p>
+      <nav class="legal-nav" aria-label="Legal">
+        <a href="terms.html">Terms of Use</a>
+        <span aria-hidden="true">·</span>
+        <a href="privacy.html">Privacy Policy</a>
+      </nav>
+      <p class="legal-note">© 2026 BrailleVision. All rights reserved.</p>
     </footer>
 
     <script src="app.js" type="module"></script>

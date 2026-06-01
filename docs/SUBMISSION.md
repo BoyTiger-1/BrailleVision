@@ -14,14 +14,6 @@ BrailleVision uses a device camera to photograph **real embossed or handwritten 
 - React, TypeScript, Vite
 - Web Camera API, Web Speech API
 
-## How to run
-
-See [README.md](../README.md). Summary:
-
-1. `pip install -r backend/requirements.txt` && `python backend/main.py`
-2. `npm install` in `frontend/` && `npm run dev`
-3. Open http://localhost:5173, allow camera, tap **Scan now** or **Live scan**
-
 ## How physical Braille is detected
 
 1. Frame converted to grayscale; CLAHE improves contrast.

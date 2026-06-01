@@ -28,12 +28,7 @@ let lastSpoken = "";
 const LIVE_MS = 900;
 
 function apiBase() {
-  const v = $("apiUrl").value.trim();
-  if (v) return v.replace(/\/$/, "");
-  if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-    return `${location.protocol}//${location.hostname}:8000`;
-  }
-  return "";
+  return location.origin.replace(/\/$/, "");
 }
 
 function voiceOn() {
@@ -99,7 +94,7 @@ function applyResult(data, label = "") {
 
 async function scanBase64(dataUrl) {
   const base = apiBase();
-  if (!base) throw new Error("Set API URL to your running BrailleVision server.");
+  if (!base) throw new Error("Unable to reach the BrailleVision API.");
   const res = await fetch(`${base}/scan/base64`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -143,7 +138,7 @@ async function runScan() {
     applyResult(data);
   } catch (e) {
     setError(e.message || "Scan failed");
-    if (voiceOn()) announce("Scan failed. Check that the API server is running.");
+    if (voiceOn()) announce("Scan failed. Please try again.");
   } finally {
     scanning = false;
     btnScan.disabled = !stream;
@@ -260,12 +255,3 @@ $("highContrast").addEventListener("change", (e) => {
   document.body.classList.toggle("high-contrast", e.target.checked);
 });
 document.body.classList.add("high-contrast");
-
-if (location.port === "8000") {
-  $("apiUrl").value = location.origin;
-}
-// GitHub Pages serves static files only — point API URL to your deployed backend.
-if (location.hostname.endsWith("github.io") && !$("apiUrl").value) {
-  $("apiUrl").placeholder = "https://your-api.onrender.com";
-  setError("Set API URL to your live BrailleVision backend (GitHub Pages cannot run the .pkl model).");
-}
