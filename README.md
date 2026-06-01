@@ -1,194 +1,145 @@
 # BrailleVision
 
-**BrailleVision** is a hackathon-ready system for **BrailleVision Hackathon 2026**: it reads **real physical Braille** (embossed or handwritten dots on paper) using a **camera** or **image upload**, converts it to **English text**, and speaks the result aloud. It is **not** a Unicode Braille translator (`⠓⠑⠇⠇⠕` → hello).
+BrailleVision turns **physical Braille** on paper into **English text** you can read or hear. Use your phone or webcam to scan embossed or printed dots—no need to copy Unicode Braille characters (`⠓⠑⠇⠇⠕`) from a screen.
 
-This repository includes:
+The project combines computer vision (finding and grouping dots), machine learning (recognizing single letters), and a simple web interface with optional read-aloud.
 
-- A **trained machine-learning classifier** (`models/braille_classifier.pkl`) — **~99% held-out accuracy** on merged practice datasets (4,160 source images).
-- **OpenCV** dot detection and **6-dot cell segmentation** for multi-character lines (camera / full words).
-- A **standalone web app** (`web/`) — HTML, CSS, and JavaScript (camera, single & multiple uploads, live scan, TTS).
-- A **FastAPI** backend that loads the `.pkl` model and serves the API + static UI at `/app`.
+**Live app:** [braillevision.onrender.com/app/](https://braillevision.onrender.com/app/)
 
 ---
 
-## Inspiration
+## About
 
-Braille is essential for literacy and independence for many visually impaired people, yet family members, teachers, and volunteers often cannot read embossed dots on paper. Hackathons like **BrailleVision 2026** ask for technology that works on **real physical Braille**, not just Unicode symbols on a screen. I built BrailleVision so a phone or webcam could act as a bridge: point, scan, read, and hear English—making printed Braille more accessible in classrooms, homes, and public spaces.
+Braille matters for independence and literacy, but many family members, teachers, and coworkers do not read it fluently. BrailleVision is meant to help in everyday situations: checking a label, following along in a classroom, or understanding a note without a dedicated human translator every time.
 
----
-
-## What it does
-
-BrailleVision is a full-stack assistive scanner:
-
-- **Captures** Braille via live camera, single image upload, or **batch upload** of many images.
-- **Detects** round dot blobs with OpenCV and groups them into standard **6-dot cells**.
-- **Recognizes** isolated letters with a trained **MLP classifier** (`braille_classifier.pkl`) learned from thousands of labeled cell images.
-- **Decodes** multi-cell words/lines using geometric Braille patterns when the camera sees full words.
-- **Speaks** recognized text with the browser **Web Speech API** and offers **high-contrast**, large-control accessibility.
-
-Open the web UI at `/app` when the API is running, or use the REST/WebSocket API from your own client.
+It is an assistive tool, not a replacement for skilled Braille readers or formal accessibility review.
 
 ---
 
-## How I built it
+## Features
 
-1. **Data** — Merged two practice datasets: *Braille Alphabet Image Dataset (A–Z)* (2,600 PNGs) and *Braille Dataset* (1,560 augmented JPGs), totaling **4,160** labeled single-cell images.
-2. **Training** — `scripts/train_model.py` binarizes 50×50 cells, augments (flip, rotate, noise, blur), and trains a scikit-learn **MLP** (1024→512→256) with `StandardScaler`; saved as `models/braille_classifier.pkl` via joblib.
-3. **Vision** — `backend/braille/detector.py` implements CLAHE, adaptive/Otsu thresholding, circularity-filtered contours, and horizontal cell bucketing.
-4. **Hybrid inference** — `ml_detector.py` uses **ML for single-cell** uploads and **pattern decode for multi-cell** camera lines.
-5. **API** — FastAPI (`backend/main.py`) exposes `/scan`, batch endpoints, WebSocket live scan, and serves static `web/` at `/app`.
-6. **Frontend** — Vanilla HTML/CSS/JS (`web/`) for camera, uploads, TTS, and alignment hints—no framework required for deployment.
-
----
-
-## Challenges I ran into
-
-- **Unicode vs physical Braille** — Judges require dot detection on paper; a text translator does not qualify.
-- **Row vs cell clustering** — Early versions grouped top/middle/bottom dot *rows* instead of 2×3 *cells*; fixing pitch-based horizontal bucketing was critical.
-- **ML vs geometry** — The classifier excels on 50×50 practice cells but crops from photos look different; a **hybrid** (ML for single cells, OpenCV patterns for words) improved real scans.
-- **Windows paths** — Dataset folders with special dashes broke `cv2.imread`; **byte decode + `imdecode`** fixed it.
-- **Client/server split** — Browsers cannot run `.pkl` files; inference runs on the API server.
-
----
-
-## Accomplishments that I'm proud of
-
-- **~99% test accuracy** on a stratified holdout after merging both datasets.
-- End-to-end demo: camera → dots → text → speech in near real time on CPU only.
-- Accessible UI with voice guidance, live regions, and alignment feedback.
-- Clear documentation and a reproducible training script for new datasets.
-- Open-source release: [github.com/BoyTiger-1/BrailleVision](https://github.com/BoyTiger-1/BrailleVision).
-
----
-
-## What I learned
-
-- How **6-dot Braille** is laid out and encoded as bit patterns (Grade 1).
-- When to use **classical CV** vs **supervised learning** in the same pipeline.
-- Building **accessible** web UIs (contrast, TTS, ARIA live regions, large targets).
-- Packaging ML for deployment: joblib bundles, API boundaries, and why pickle does not belong in the browser.
-- Practical dataset merging (folder-per-class vs flat filenames) and augmentation for small vision sets.
-
----
-
-## What's next for BrailleVision
-
-- **Grade 2 (contracted) Braille** and multi-language tables.
-- **CNN / YOLO** dot detector fine-tuned on cropped cells from real photos.
-- **Mobile app** (Flutter) with on-device inference (ONNX/TFLite).
-- **Glare and blur detection** with auto-capture when the frame is sharp.
-- **Community dataset** — crowdsourced labeled photos of physical Braille sheets.
-
----
-
-## Table of contents
-
-0. [Inspiration](#inspiration)
-0. [What it does](#what-it-does)
-0. [How I built it](#how-i-built-it)
-0. [Challenges I ran into](#challenges-i-ran-into)
-0. [Accomplishments that I'm proud of](#accomplishments-that-im-proud-of)
-0. [What I learned](#what-i-learned)
-0. [What's next for BrailleVision](#whats-next-for-braillevision)
-1. [Problem statement](#problem-statement)
-2. [How it works](#how-it-works)
-3. [Repository layout](#repository-layout)
-4. [Requirements](#requirements)
-5. [Quick start (5 minutes)](#quick-start-5-minutes)
-6. [Using the web app](#using-the-web-app)
-7. [API reference](#api-reference)
-8. [Training the model](#training-the-model)
-9. [Practice dataset](#practice-dataset)
-10. [Accuracy and limitations](#accuracy-and-limitations)
-11. [Accessibility](#accessibility)
-12. [Troubleshooting](#troubleshooting)
-13. [License](#license)
-
----
-
-## Problem statement
-
-Visually impaired readers use **physical Braille** on paper, labels, and signage. Caregivers, teachers, and volunteers often **cannot read Braille quickly**. This project bridges that gap by:
-
-1. **Detecting raised or ink dots** in a camera image (not Unicode symbols).
-2. **Grouping dots** into standard **6-dot Braille cells** (two columns × three rows).
-3. **Decoding** cells into **English letters** (Grade 1).
-4. **Speaking** the result with **text-to-speech**.
+- **Camera scanning** — live preview, single capture, or continuous live scan
+- **Image upload** — one file or a batch of images
+- **Physical dot detection** — OpenCV finds round blobs and groups them into standard 6-dot cells
+- **Letter recognition** — trained classifier (`models/braille_classifier.pkl`, ~99% on held-out practice data)
+- **Word and line decoding** — geometric pattern matching when the camera sees multiple cells
+- **Text-to-speech** — optional voice guidance and read-aloud in the browser
+- **Accessible UI** — high contrast, large controls, screen-reader-friendly live regions
 
 ---
 
 ## How it works
 
-### Two complementary recognition paths
+### Two recognition paths
 
-| Input type | Method | Why |
-|------------|--------|-----|
-| **Single-cell image** (e.g. 50×50 practice PNG, one letter) | **ML classifier** (`braille_classifier.pkl`) | Matches how the model was trained (one letter per image). |
-| **Multi-cell image** (camera photo, word/line on paper) | **OpenCV** finds dots → groups cells → **geometric pattern** decode | Cropped cells from photos differ from training patches; dot geometry is reliable for full words. |
+| Input | Approach |
+|-------|----------|
+| **Single-cell image** (one letter in frame) | Machine learning on a 50×50 cell patch |
+| **Multi-cell photo** (words or lines) | OpenCV dot detection → cell grouping → Grade 1 pattern decode |
 
-Both paths are orchestrated in `backend/braille/ml_detector.py`.
+Both are handled in `backend/braille/ml_detector.py`.
 
-### Pipeline diagram
+### Pipeline
 
 ```mermaid
 flowchart TB
   subgraph input [Input]
-    CAM[Webcam / mobile camera]
-    UPL[Upload 1 or many images]
+    CAM[Camera or upload]
   end
-
-  subgraph api [FastAPI backend]
-    DEC[Decode JPEG/PNG]
-    ML[ml_detector.detect_braille_ml]
+  subgraph api [API]
+    ML[ml_detector]
   end
-
-  subgraph vision [Computer vision]
-    PRE[Grayscale + CLAHE + threshold]
-    DOT[Contour blob filter → dot centers]
-    CELL[Group dots into Braille cells]
+  subgraph vision [Vision]
+    DOT[Find dots]
+    CELL[Group cells]
   end
-
-  subgraph ml [Machine learning]
+  subgraph ml [ML]
     PKL[braille_classifier.pkl]
-    MLP[MLP 1024-512-256 + StandardScaler]
   end
-
   subgraph out [Output]
     TXT[English text]
-    TTS[Browser speechSynthesis]
+    TTS[Speech optional]
   end
-
-  CAM --> DEC
-  UPL --> DEC
-  DEC --> ML
-  ML --> PRE
-  PRE --> DOT
-  DOT --> CELL
-  CELL -->|1 cell or small image| PKL
-  PKL --> MLP
-  CELL -->|2+ cells| GEO[Pattern decode A-Z]
-  MLP --> TXT
-  GEO --> TXT
+  CAM --> ML
+  ML --> DOT --> CELL
+  CELL -->|one cell| PKL --> TXT
+  CELL -->|many cells| GEO[Pattern decode] --> TXT
   TXT --> TTS
 ```
 
-### Physical dot detection (OpenCV)
+### Dot detection (OpenCV)
 
-1. **Preprocess** — CLAHE contrast, Gaussian blur, multiple binary masks (dark-on-light and embossed-like edges).
-2. **Blob detection** — external contours filtered by **area** and **circularity** (dots are roughly round).
-3. **Cell grouping** — estimate dot **pitch** (nearest-neighbor distance), bucket dots horizontally into **character cells**.
-4. **Pattern mapping** — each dot assigned to positions **1–6** (standard Braille numbering); bits form a pattern → letter via Grade 1 table in `backend/braille/patterns.py`.
+1. Contrast enhancement (CLAHE) and thresholding for dark dots and embossed relief  
+2. Contour filtering by size and roundness  
+3. Horizontal grouping into character cells using estimated dot spacing  
+4. Mapping each dot to positions 1–6 in a 2×3 cell, then to Grade 1 English  
 
-### Machine learning (`.pkl`)
+### Machine learning
 
-- **Algorithm:** scikit-learn `MLPClassifier` inside a `Pipeline` with `StandardScaler`.
-- **Input:** 50×50 grayscale cell, Otsu-binarized, flattened to 2500 features.
-- **Output:** one of **26 classes** (A–Z).
-- **Training script:** `scripts/train_model.py`
-- **Metrics (included run):** **100%** train and test accuracy on stratified 85/15 split after augmentation.
+- **Model:** scikit-learn MLP (1024→512→256) with `StandardScaler`  
+- **Training:** `scripts/train_model.py`  
+- **Runtime:** model loads on the API server; the web app calls REST endpoints (browsers do not load the `.pkl` directly)
 
-> The `.pkl` model is loaded on the API server; the web UI calls the REST API for inference.
+---
+
+## Architecture
+
+1. **Data** — merged training sets: *Braille Alphabet Image Dataset (A–Z)* (2,600 PNGs) and *Braille Dataset* (1,560 JPGs), 4,160 labeled cells total  
+2. **Training** — augmentation (flip, rotate, noise, blur), Otsu binarization, joblib export to `models/braille_classifier.pkl`  
+3. **Vision** — `backend/braille/detector.py`  
+4. **Hybrid inference** — `ml_detector.py`  
+5. **API** — FastAPI in `backend/main.py` (`/scan`, batch routes, WebSocket, static UI at `/app`)  
+6. **Web UI** — `web/` (HTML, CSS, JavaScript)
+
+---
+
+## Design notes
+
+Early versions clustered dot *rows* instead of full *cells*; fixing pitch-based bucketing made multi-letter scans reliable. Single-cell ML works well on clean patches; photo crops look different, so multi-cell lines use geometric decoding. Image loading uses byte buffers and `cv2.imdecode` where file paths are awkward on Windows.
+
+---
+
+## Roadmap
+
+- Grade 2 (contracted) Braille  
+- Stronger models on real-world cropped cells (e.g. small CNN)  
+- Mobile app with optional on-device inference  
+- Glare and blur detection before capture  
+- Community-contributed labeled photos  
+
+---
+
+## Table of contents
+
+- [About](#about)
+- [Features](#features)
+- [How it works](#how-it-works)
+- [Architecture](#architecture)
+- [Design notes](#design-notes)
+- [Roadmap](#roadmap)
+- [Problem statement](#problem-statement)
+- [Repository layout](#repository-layout)
+- [Requirements](#requirements)
+- [Quick start](#quick-start)
+- [Using the web app](#using-the-web-app)
+- [API reference](#api-reference)
+- [Training the model](#training-the-model)
+- [Training data](#training-data)
+- [Accuracy and limitations](#accuracy-and-limitations)
+- [Accessibility](#accessibility)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
+
+---
+
+## Problem statement
+
+Physical Braille uses raised or ink dots in a 6-dot cell layout. BrailleVision:
+
+1. Detects those dots in a camera image  
+2. Groups them into cells (two columns × three rows)  
+3. Decodes Grade 1 English  
+4. Optionally speaks the result  
 
 ---
 
@@ -196,65 +147,43 @@ flowchart TB
 
 ```
 BrailleVision/
-├── models/
-│   └── braille_classifier.pkl    # Trained model (required at runtime)
-├── web/                          # Production UI (HTML + CSS + JS)
-│   ├── index.html
-│   ├── styles.css
-│   └── app.js
+├── models/braille_classifier.pkl
+├── web/                    # Web interface
 ├── backend/
-│   ├── main.py                   # FastAPI app + static mount /app
-│   ├── requirements.txt
-│   └── braille/
-│       ├── classifier.py         # Load .pkl, predict cell
-│       ├── ml_detector.py        # ML + CV hybrid
-│       ├── detector.py           # OpenCV dot/cell logic
-│       ├── decoder.py            # Pattern → text
-│       └── patterns.py           # Grade 1 bit patterns
+│   ├── main.py
+│   └── braille/            # detector, classifier, ml_detector, decoder
 ├── scripts/
-│   ├── train_model.py            # Train and save .pkl
+│   ├── train_model.py
 │   └── generate_sample_braille.py
-├── Braille Alphabet Image Dataset (A-Z)/   # 2600 practice images
-│   ├── A/  (A_0.png … A_99.png)
-│   ├── …
-│   └── Z/
-├── samples/                      # Generated test images
-├── frontend/                     # Optional React dev UI (not required)
-├── docs/
-├── README.md                     # This file
-└── LICENSE
+├── Braille Alphabet Image Dataset (A-Z)/
+├── Braille Dataset/
+├── samples/
+└── frontend/               # Optional React dev UI
 ```
 
 ---
 
 ## Requirements
 
-### Software
-
-| Component | Version |
-|-----------|---------|
+| Component | Notes |
+|-----------|--------|
 | Python | 3.10+ (tested on 3.12) |
-| pip packages | See `backend/requirements.txt` |
-| Modern browser | Chrome / Edge / Firefox (camera + Web Speech API) |
-| Node.js | **Optional** — only if using `frontend/` Vite app |
+| Dependencies | `backend/requirements.txt` |
+| Browser | Chrome, Edge, or Firefox (camera + speech) |
+| Node.js | Optional, only for `frontend/` |
 
-### Hardware
-
-- Webcam or phone camera (rear camera recommended on mobile).
-- CPU-only inference is sufficient (no GPU required).
+A webcam or phone camera is enough; GPU is not required.
 
 ---
 
-## Quick start (5 minutes)
+## Quick start
 
-### 1. Clone the repository
+### Clone and install
 
 ```bash
 git clone https://github.com/BoyTiger-1/BrailleVision.git
 cd BrailleVision
 ```
-
-### 2. Create Python environment and install dependencies
 
 **Windows (PowerShell):**
 
@@ -274,110 +203,52 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Verify the model exists
+### Model file
 
-The repo should include `models/braille_classifier.pkl`. If missing:
+The repository includes `models/braille_classifier.pkl`. If it is missing:
 
 ```bash
 python scripts/train_model.py --augment 4
 ```
 
-Training takes several minutes on CPU (~13k augmented samples).
-
-### 4. Start the API server
-
-From `backend/` with venv activated:
+### Run
 
 ```bash
+cd backend
 python main.py
 ```
 
+- Web app: http://127.0.0.1:8000/app/  
 - API docs: http://127.0.0.1:8000/docs  
 - Health: http://127.0.0.1:8000/health  
-- **Web app:** http://127.0.0.1:8000/app/
-
-### 5. Open the web app
-
-Browse to **http://127.0.0.1:8000/app/** → allow camera → **Scan now** or upload practice images from the dataset folder.
 
 ---
 
 ## Using the web app
 
-### Camera mode
-
-1. Click **Start camera**.
-2. Point at physical Braille (fill the dashed alignment frame).
-3. **Scan now** — single frame, or **Live scan** — ~1 scan/second.
-4. Read **Recognized text**; enable **Voice guidance** for automatic TTS.
-
-### Upload mode
-
-- **Upload image(s)** — select one or more files.
-  - **One file:** shows text + stats for that image.
-  - **Multiple files:** batch results (e.g. one letter per practice PNG) plus combined text.
-
-### Settings
-
-| Control | Effect |
-|---------|--------|
-| Voice guidance | Speaks hints and recognized text |
-| High contrast | Increases UI contrast |
-| Show detection overlay | Returns debug JPEG with green dot circles |
-
-### Testing with practice data
-
-Upload any file from:
-
-`Braille Alphabet Image Dataset (A-Z)/<LETTER>/<LETTER>_0.png`
-
-Expected: that letter (e.g. `H_0.png` → **h**).
+1. Open `/app/` and allow camera access if prompted.  
+2. **Start camera**, align Braille inside the corner guides, then **Scan now** or **Live scan**.  
+3. Or **Upload** one or more images.  
+4. Read the translation; use **Read aloud** or enable **Voice guidance** in preferences.  
+5. Toggle **Detection overlay** to see where dots were found.  
 
 ---
 
 ## API reference
 
-Base URL: `http://127.0.0.1:8000`
+Base URL: same host as the app (e.g. `http://127.0.0.1:8000`).
 
-### `GET /health`
+| Endpoint | Description |
+|----------|-------------|
+| `GET /health` | Status and model metrics |
+| `GET /model/info` | Model version and classes |
+| `POST /scan` | Multipart image upload |
+| `POST /scan/base64` | JSON `{ "image": "data:image/...", "include_debug": true }` |
+| `POST /scan/batch` | Multiple files |
+| `POST /scan/batch/base64` | JSON `{ "images": [...] }` |
+| `WS /ws/scan` | Streaming frames |
 
-Returns service status and model metrics if loaded.
-
-### `GET /model/info`
-
-Returns model version, classes, and test accuracy from training.
-
-### `POST /scan`
-
-`multipart/form-data` — field `file` = image.
-
-### `POST /scan/base64`
-
-```json
-{
-  "image": "data:image/jpeg;base64,...",
-  "include_debug": true
-}
-```
-
-### `POST /scan/batch`
-
-Multiple files in one request (`file` repeated).
-
-### `POST /scan/batch/base64`
-
-```json
-{
-  "images": ["data:image/png;base64,...", "..."],
-  "include_debug": false
-}
-```
-
-### `WebSocket /ws/scan`
-
-Send JSON: `{"image": "<base64>", "debug": false}` per frame; receive `ScanResponse` JSON.
-
-### Response shape
+**Example response:**
 
 ```json
 {
@@ -385,9 +256,8 @@ Send JSON: `{"image": "<base64>", "debug": false}` per frame; receive `ScanRespo
   "confidence": 0.95,
   "dot_count": 14,
   "cell_count": 5,
-  "alignment_hint": "Good alignment...",
-  "debug_image": "<base64 jpeg or null>",
-  "cells": [],
+  "alignment_hint": "Good alignment. Hold steady for best results.",
+  "debug_image": null,
   "per_cell_confidence": [0.99, 0.98, 0.99, 0.99, 0.97]
 }
 ```
@@ -396,48 +266,20 @@ Send JSON: `{"image": "<base64>", "debug": false}` per frame; receive `ScanRespo
 
 ## Training the model
 
-### Dataset
-
-Folder: `Braille Alphabet Image Dataset (A-Z)/`  
-- **26 classes** (A–Z)  
-- **100 images per class** → **2600** PNGs  
-- **50×50** pixels, high-contrast dot patterns  
-
-### Command
-
-From repository root:
-
 ```bash
 python scripts/train_model.py --augment 4 --out models/braille_classifier.pkl
 ```
 
 | Flag | Meaning |
 |------|---------|
-| `--augment 4` | 4 augmented copies per image (flip, rotate, noise, blur) |
-| `--out` | Output path for joblib bundle |
+| `--augment 4` | Extra training copies per image |
+| `--out` | Output path for the joblib bundle |
 
-### What is saved in the `.pkl`
+The script discovers Braille dataset folders in the project root automatically.
 
-```python
-{
-  "model": sklearn Pipeline,      # scaler + MLP
-  "label_encoder": LabelEncoder,
-  "image_size": 50,
-  "version": "1.0.0",
-  "classes": ["A", "B", ...],
-  "metrics": {"train_accuracy": 1.0, "test_accuracy": 1.0},
-  "dataset": "..."
-}
-```
+**Bundle contents:** sklearn pipeline, label encoder, image size, classes, metrics, dataset list.
 
-Load in Python:
-
-```python
-import joblib
-bundle = joblib.load("models/braille_classifier.pkl")
-```
-
-### CLI test (no server)
+**CLI test without server:**
 
 ```bash
 python backend/run_detect.py samples/braille_hello.png
@@ -445,85 +287,54 @@ python backend/run_detect.py samples/braille_hello.png
 
 ---
 
-## Practice dataset
+## Training data
 
-BrailleVision trains on **both** of these merged sources (4,160 images total):
+| Dataset | Location | Count | Format |
+|---------|----------|-------|--------|
+| Braille Alphabet (A–Z) | `Braille Alphabet Image Dataset (A-Z)/` | 2,600 | PNG 50×50, folder per letter |
+| Braille Dataset | `Braille Dataset/Braille Dataset/` | 1,560 | JPG, label = first letter of filename |
 
-### Dataset 1 — Braille Alphabet Image Dataset (A–Z)
-
-| Property | Value |
-|----------|--------|
-| Location | `Braille Alphabet Image Dataset (A-Z)/` |
-| Format | PNG, 50×50 |
-| Count | 2,600 (100 per letter) |
-| Labels | Parent folder name (`A`, `B`, …) |
-
-### Dataset 2 — Braille Dataset
-
-| Property | Value |
-|----------|--------|
-| Location | `Braille Dataset/Braille Dataset/` |
-| Format | JPG (dim / rot / whs augmentations in filename) |
-| Count | 1,560 (60 per letter) |
-| Labels | First character of filename (e.g. `a1.JPG0dim.jpg` → **a**) |
-
-### Training command (merged)
-
-```bash
-python scripts/train_model.py --augment 4
-```
-
-Auto-discovers all Braille folders in the repo root. Latest merged metrics: **~98.7%** test / **~99.8%** train accuracy.
-
-**Loading note:** On Windows, paths with special characters may fail with `cv2.imread`. The code reads via **bytes + `cv2.imdecode`** (already implemented in training and inference).
+Merged training typically reaches **~99%** held-out accuracy on single-cell images.
 
 ---
 
 ## Accuracy and limitations
 
-| Scenario | Expected performance |
-|----------|----------------------|
-| Practice PNGs / JPGs (merged datasets) | **~99%** letter accuracy (ML path) |
-| Synthetic multi-letter (`samples/braille_hello.png`) | **Correct word** via CV pattern path (`hello`) |
-| Real camera, good light, embossed type | Good; depends on focus and glare |
-| Handwritten Braille | Experimental; dot shape varies |
-| Grade 2 (contracted) Braille | **Not supported** in v1 |
-| Unicode Braille characters | **Not supported** (by design) |
+| Scenario | What to expect |
+|----------|----------------|
+| Clean single-letter images | Very high accuracy (ML) |
+| Multi-letter synthetic samples | Reliable via pattern decode |
+| Real camera, good lighting | Generally good; depends on focus and glare |
+| Handwritten Braille | Variable |
+| Grade 2 contracted Braille | Not supported yet |
+| Unicode Braille text | Not supported (by design) |
 
-**Performance:** ~100–500 ms per frame on a typical laptop (CPU).
+Typical latency: about 100–500 ms per frame on a laptop CPU.
 
 ---
 
 ## Accessibility
 
 - Skip link to main content  
-- Large touch targets (52px+), high-contrast theme  
-- `aria-live` for recognized text  
-- **Web Speech API** for read-aloud and guidance  
-- Alignment hints when dots or cells are not detected  
-- Keyboard-focus visible outlines  
+- Large touch targets and high-contrast theme  
+- `aria-live` region for new translations  
+- Web Speech API for optional read-aloud  
+- Alignment hints when detection is weak  
 
 ---
 
 ## Troubleshooting
 
-| Issue | Fix |
-|-------|-----|
-| `Model not found` | `python scripts/train_model.py` |
-| Camera blocked | HTTPS or localhost; browser camera permissions |
-| `Scan failed` / network error | API unreachable; check `/health` |
-| Empty text | Lighting, distance, alignment frame |
-| Wrong letters on photos | Flat paper, reduce motion blur |
-| Large `.pkl` (~35 MB) | Expected for MLP input size 2500 |
+| Issue | What to try |
+|-------|-------------|
+| `Model not found` | Run `python scripts/train_model.py` |
+| Camera blocked | Use HTTPS or localhost; check browser permissions |
+| Scan failed | Confirm `/health` responds |
+| Empty text | Better light, move closer, hold paper flat |
+| Wrong letters | Reduce blur; keep paper parallel to the camera |
 
 ---
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
-
----
-
-## Acknowledgments
-
-Built for **BrailleVision Hackathon 2026** — assistive technology for real-world physical Braille.

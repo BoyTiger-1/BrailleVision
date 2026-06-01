@@ -3,80 +3,160 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="BrailleVision — scan physical Braille with your camera" />
-    <title>BrailleVision — Physical Braille Scanner</title>
+    <meta name="description" content="BrailleVision reads physical Braille from your camera and speaks the English translation." />
+    <title>BrailleVision — Read Physical Braille</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to main content</a>
 
+    <div class="page-bg" aria-hidden="true"></div>
+
     <header class="site-header">
-      <h1>BrailleVision</h1>
-      <p class="tagline">Real physical Braille → English text &amp; speech (ML + camera)</p>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+        <div>
+          <p class="brand-eyebrow">Assistive reading</p>
+          <h1>BrailleVision</h1>
+        </div>
+      </div>
+      <p class="hero-lead">
+        Point your camera at <strong>embossed or printed Braille</strong> on paper and get
+        plain English text—read on screen or aloud. Built for real dots, not Unicode symbols.
+      </p>
     </header>
 
-    <main id="main">
-      <section class="panel" aria-labelledby="capture-heading">
-        <h2 id="capture-heading">Capture</h2>
-
-        <div class="video-wrap" role="img" aria-label="Camera preview">
-          <p class="placeholder" id="placeholder">Start the camera or upload image(s).</p>
-          <video id="video" playsinline muted hidden></video>
-          <canvas id="captureCanvas" hidden aria-hidden="true"></canvas>
-          <div class="alignment-frame" aria-hidden="true"></div>
+    <main id="main" class="layout">
+      <section class="card card-scan" aria-labelledby="capture-heading">
+        <div class="card-head">
+          <h2 id="capture-heading">Scan</h2>
+          <p class="card-desc">Camera, live mode, or upload one or many images.</p>
         </div>
 
-        <img id="debugImage" class="debug-image" alt="Detection overlay" hidden />
+        <div class="viewport" role="img" aria-label="Camera preview">
+          <p class="viewport-placeholder" id="placeholder">
+            <span class="placeholder-icon" aria-hidden="true">◎</span>
+            Start the camera or choose photos to begin.
+          </p>
+          <video id="video" playsinline muted hidden></video>
+          <canvas id="captureCanvas" hidden aria-hidden="true"></canvas>
+          <div class="viewport-guide" aria-hidden="true">
+            <span class="corner tl"></span>
+            <span class="corner tr"></span>
+            <span class="corner bl"></span>
+            <span class="corner br"></span>
+          </div>
+        </div>
 
-        <div class="toolbar" role="toolbar" aria-label="Scanner controls">
-          <button type="button" id="btnCamera" class="btn primary">Start camera</button>
-          <button type="button" id="btnScan" class="btn primary" disabled>Scan now</button>
-          <button type="button" id="btnLive" class="btn" disabled aria-pressed="false">Live scan</button>
-          <button type="button" id="btnStop" class="btn" disabled>Stop camera</button>
-          <label class="btn upload-label">
-            Upload image(s)
+        <img id="debugImage" class="debug-preview" alt="Detection overlay" hidden />
+
+        <div class="actions" role="toolbar" aria-label="Scanner controls">
+          <button type="button" id="btnCamera" class="btn btn-accent">
+            <span class="btn-label">Start camera</span>
+          </button>
+          <button type="button" id="btnScan" class="btn btn-accent" disabled>
+            <span class="btn-label">Scan now</span>
+          </button>
+          <button type="button" id="btnLive" class="btn btn-ghost" disabled aria-pressed="false">
+            <span class="btn-label">Live scan</span>
+          </button>
+          <button type="button" id="btnStop" class="btn btn-ghost" disabled>
+            <span class="btn-label">Stop</span>
+          </button>
+          <label class="btn btn-ghost upload-label">
+            <span class="btn-label">Upload</span>
             <input type="file" id="fileInput" accept="image/*" multiple hidden />
           </label>
         </div>
       </section>
 
-      <section class="panel results" aria-labelledby="results-heading" aria-live="polite" aria-atomic="true">
-        <h2 id="results-heading">Results</h2>
-        <p class="recognized" id="recognizedText">—</p>
+      <section
+        class="card card-output"
+        aria-labelledby="results-heading"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <div class="card-head">
+          <h2 id="results-heading">Translation</h2>
+          <p class="card-desc">Recognized English from detected Braille cells.</p>
+        </div>
 
-        <dl class="stats" id="stats">
-          <div><dt>Confidence</dt><dd id="statConf">—</dd></div>
-          <div><dt>Dots</dt><dd id="statDots">—</dd></div>
-          <div><dt>Cells</dt><dd id="statCells">—</dd></div>
-        </dl>
+        <div class="output-display">
+          <p class="output-text" id="recognizedText">—</p>
+        </div>
 
-        <p class="hint" id="hint" role="status"></p>
-        <p class="error" id="error" role="alert" hidden></p>
+        <div class="metrics" id="stats">
+          <div class="metric">
+            <span class="metric-label">Confidence</span>
+            <span class="metric-value" id="statConf">—</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Dots</span>
+            <span class="metric-value" id="statDots">—</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Cells</span>
+            <span class="metric-value" id="statCells">—</span>
+          </div>
+        </div>
 
-        <div id="batchResults" class="batch-results" hidden></div>
+        <p class="status-line" id="hint" role="status"></p>
+        <p class="status-line status-error" id="error" role="alert" hidden></p>
 
-        <div class="toolbar">
-          <button type="button" id="btnSpeak" class="btn" disabled>Read aloud</button>
-          <button type="button" id="btnStopSpeak" class="btn">Stop speech</button>
+        <div id="batchResults" class="batch-list" hidden></div>
+
+        <div class="actions actions-compact">
+          <button type="button" id="btnSpeak" class="btn btn-ghost" disabled>Read aloud</button>
+          <button type="button" id="btnStopSpeak" class="btn btn-ghost">Stop speech</button>
         </div>
       </section>
 
-      <section class="panel settings" aria-labelledby="settings-heading">
-        <h2 id="settings-heading">Accessibility</h2>
-        <label class="toggle"><input type="checkbox" id="voiceGuide" checked /> Voice guidance</label>
-        <label class="toggle"><input type="checkbox" id="highContrast" checked /> High contrast</label>
-        <label class="toggle"><input type="checkbox" id="showDebug" /> Show detection overlay</label>
+      <section class="card card-settings" aria-labelledby="settings-heading">
+        <div class="card-head">
+          <h2 id="settings-heading">Preferences</h2>
+        </div>
+        <div class="pref-grid">
+          <label class="pref">
+            <input type="checkbox" id="voiceGuide" checked />
+            <span class="pref-text">
+              <strong>Voice guidance</strong>
+              <small>Speak results and helpful cues</small>
+            </span>
+          </label>
+          <label class="pref">
+            <input type="checkbox" id="highContrast" checked />
+            <span class="pref-text">
+              <strong>High contrast</strong>
+              <small>Stronger text and control edges</small>
+            </span>
+          </label>
+          <label class="pref">
+            <input type="checkbox" id="showDebug" />
+            <span class="pref-text">
+              <strong>Detection overlay</strong>
+              <small>Show dot markers on the image</small>
+            </span>
+          </label>
+        </div>
       </section>
     </main>
 
     <footer class="site-footer">
-      <p>BrailleVision — physical Braille recognition</p>
+      <p class="footer-tag">Open-source Braille recognition · Grade 1 English</p>
       <nav class="legal-nav" aria-label="Legal">
-        <a href="terms.html">Terms of Use</a>
-        <span aria-hidden="true">·</span>
-        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
       </nav>
-      <p class="legal-note">© 2026 BrailleVision. All rights reserved.</p>
+      <p class="legal-note">© 2026 BrailleVision</p>
     </footer>
 
     <script src="app.js" type="module"></script>

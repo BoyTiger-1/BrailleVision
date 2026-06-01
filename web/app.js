@@ -79,7 +79,7 @@ function applyResult(data, label = "") {
     statDots.textContent = String(data.dot_count ?? "—");
     statCells.textContent = String(data.cell_count ?? "—");
     hintEl.textContent = data.alignment_hint || "";
-    hintEl.className = data.dot_count < 3 ? "hint warn" : "hint";
+    hintEl.className = data.dot_count < 3 ? "status-line status-warn" : "status-line";
     btnSpeak.disabled = !data.text;
     if (data.text) speak(data.text);
   }
